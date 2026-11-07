@@ -1,9 +1,9 @@
 <!doctype html><html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#14253b"><title>BilKoll – jämför bilägande</title>
-<style>*{box-sizing:border-box}body{margin:0;background:#f2f5fa;color:#16243a;font:15px system-ui,-apple-system,sans-serif}.wrap{max-width:1000px;margin:auto;padding:14px}header{background:#14253b;color:white;border-radius:16px;padding:24px;margin-bottom:15px}h1{margin:0;font-size:27px}h2{font-size:18px;margin:0 0 12px}h3{font-size:14px;border-top:1px solid #d9e0e9;padding-top:14px;margin:16px 0 10px}.card{background:white;border:1px solid #dce3ec;border-radius:15px;padding:16px;margin-bottom:15px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.third{grid-template-columns:repeat(3,minmax(0,1fr))}.wide{grid-column:1/-1}label{display:block;color:#59677b;font-size:12px;margin-bottom:5px}input,select{width:100%;min-width:0;padding:11px 9px;border:1px solid #cbd4df;border-radius:8px;color:#172338;background:white;font:inherit}button{border:0;border-radius:9px;padding:11px 14px;background:#dbe7ff;color:#194287;font:inherit;font-weight:650;cursor:pointer}button.primary,.tabs button.active{background:#245bd2;color:white}button:disabled{opacity:.4}.row{display:flex;align-items:center;justify-content:space-between;gap:12px}.tabs{display:flex;gap:5px;margin:15px 0;flex-wrap:wrap}.tabs button{flex:1;min-width:100px}.hint{font-size:12px;color:#617185;line-height:1.55}.big{font-size:22px;font-weight:760}.stat{background:#f0f5fc;padding:12px;border-radius:11px}.line{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #ebedf1}.line span:last-child{font-weight:700;text-align:right}.bar{height:9px;border-radius:10px;background:#e6ebf2;overflow:hidden;margin:8px 0}.bar div{height:100%;border-radius:10px}.warn{color:#ad4c1a}.summary{border-top:2px solid #e7edf5;margin-top:17px;padding-top:13px}@media(max-width:540px){.wrap{padding:9px}header{padding:18px}.third{grid-template-columns:repeat(2,minmax(0,1fr))}.big{font-size:20px}}</style></head>
+<style>*{box-sizing:border-box}body{margin:0;background:#f2f5fa;color:#16243a;font:15px system-ui,-apple-system,sans-serif}.wrap{max-width:1000px;margin:auto;padding:14px}header{background:#14253b;color:white;border-radius:16px;padding:24px;margin-bottom:15px}h1{margin:0;font-size:27px}h2{font-size:18px;margin:0 0 12px}h3{font-size:14px;border-top:1px solid #d9e0e9;padding-top:14px;margin:16px 0 10px}.card{background:white;border:1px solid #dce3ec;border-radius:15px;padding:16px;margin-bottom:15px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.third{grid-template-columns:repeat(3,minmax(0,1fr))}.wide{grid-column:1/-1}label{display:block;color:#59677b;font-size:12px;margin-bottom:5px}input,select{width:100%;min-width:0;padding:11px 9px;border:1px solid #cbd4df;border-radius:8px;color:#172338;background:white;font:inherit}button{border:0;border-radius:9px;padding:11px 14px;background:#dbe7ff;color:#194287;font:inherit;font-weight:650;cursor:pointer}button.primary,.tabs button.active{background:#245bd2;color:white}button:disabled{opacity:.4}.row{display:flex;align-items:center;justify-content:space-between;gap:12px}.tabs{display:flex;gap:5px;margin:15px 0;flex-wrap:wrap}.tabs button{flex:1;min-width:100px}.hint{font-size:12px;color:#617185;line-height:1.55}.big{font-size:22px;font-weight:760}.stat{background:#f0f5fc;padding:12px;border-radius:11px}.line{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #ebedf1}.line span:last-child{font-weight:700;text-align:right}.bar{height:9px;border-radius:10px;background:#e6ebf2;overflow:hidden;margin:8px 0}.bar div{height:100%;border-radius:10px}.warn{color:#ad4c1a}.summary{border-top:2px solid #e7edf5;margin-top:17px;padding-top:13px}@media(max-width:540px){.wrap{padding:9px}header{padding:18px}.third{grid-template-columns:repeat(2,minmax(0,1fr))}.big{font-size:20px}}</style><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script></head>
 <body><div class="wrap"><header><h1>🚙 BilKoll</h1><p>Vad kostar bilen egentligen? Jämför upp till tre valfria bilar.</p></header>
 <section class="card"><h2>Gemensamma antaganden</h2><div class="grid third"><div><label>Jämförelseperiod (år)</label><select id="years"><option>2</option><option selected>3</option><option>5</option><option>7</option><option>10</option></select></div><div><label>Körsträcka (mil/år)</label><input id="miles" type="number"></div><div><label>Bensin (kr/l)</label><input id="petrol" type="number" step=".1"></div><div><label>Diesel (kr/l)</label><input id="diesel" type="number" step=".1"></div><div><label>El (kr/kWh)</label><input id="electricity" type="number" step=".1"></div></div></section>
 <section class="card"><div class="row"><h2>Dina bilar</h2><button id="add" class="primary">+ Lägg till bil</button></div><nav class="tabs" id="tabs"></nav><div id="editor"></div></section>
-<section class="card"><h2>Kostnadsjämförelse</h2><div id="results"></div></section><div class="row"><button id="reset">Återställ</button><button id="export">Exportera kalkyl</button></div>
+<section class="card"><h2>Kostnadsjämförelse</h2><div id="results"></div></section><div class="row"><button id="reset">Återställ</button><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="primary" id="excel-export">Exportera Excel (.xlsx)</button><button id="export">Spara JSON</button><button id="import">Läs in JSON</button><input id="import-file" type="file" accept=".json,application/json" style="display:none"></div></div>
 <p class="hint">BilKoll använder redigerbara exempelvärden, inte hämtade fordonspriser. Kostnaden inkluderar värdeminskning, ränta och drift, medan amortering påverkar kassaflödet. Kontantinsats på 20 % antas vid köp. Ingen hänsyn tas till uppläggningsavgifter eller ränteavdrag. Lånevillkor och inbyte behöver godkännas av finansbolaget.</p></div>
 <script>
 (()=>{'use strict';
@@ -48,6 +48,75 @@ Object.keys(s.g).forEach(k=>$(k).addEventListener('input',e=>{s.g[k]=num(e.targe
 $('add').onclick=()=>{if(s.cars.length>=3)return;let id=s.nextId++;s.cars.push(make(id,'Bil '+String.fromCharCode(65+s.cars.length),'gas',250000));s.active=id;save();render()};
 $('reset').onclick=()=>{if(confirm('Återställa kalkylen?')){s=fresh();save();render()}};
 $('export').onclick=()=>{const b=new Blob([JSON.stringify(s,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='bilkoll-kalkyl.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
+
+function exportExcel(){
+ if(typeof XLSX==='undefined'){alert('Excel-exportens bibliotek kunde inte laddas. Kontrollera internetanslutningen och försök igen.');return;}
+ const as=s.cars.map(calc),g=s.g,wb=XLSX.utils.book_new();
+ const summary=[
+ ['BilKoll – jämförelse av bilägande'],
+ ['Exportdatum',new Date().toLocaleDateString('sv-SE')],
+ ['Jämförelseperiod (år)',g.years],
+ ['Körsträcka (mil/år)',g.miles],
+ [],
+ ['Mått',...as.map(x=>x.name)],
+ ['Drivlina',...as.map(x=>({gas:'Bensin',diesel:'Diesel',hybrid:'Hybrid',phev:'Laddhybrid',electric:'Elbil'})[x.drive]||x.drive)],
+ ['Scenario',...as.map(x=>x.keep?'Behålla':'Köpa')],
+ ['Bilens inköpspris / nuvarande värde (kr)',...as.map(x=>x.price)],
+ ['Inbytesvärde (kr)',...as.map(x=>x.keep?0:x.trade)],
+ ['Skuld på inbytesbil (kr)',...as.map(x=>x.keep?0:x.oldDebt)],
+ ['Inbytesövervärde (kr)',...as.map(x=>x.keep?0:x.equity)],
+ ['Extra egna kontanter (kr)',...as.map(x=>x.keep?0:x.cash)],
+ ['Kontanter som krävs för 20 % insats (kr)',...as.map(x=>x.keep?0:x.required)],
+ ['Kontanter som saknas (kr)',...as.map(x=>x.gap)],
+ ['Låneskuld vid start (kr)',...as.map(x=>x.loan)],
+ ['Lånebetalning per månad (kr)',...as.map(x=>x.p)],
+ ['Skuld vid periodens slut (kr)',...as.map(x=>x.bal)],
+ [],
+ ['Ägandekostnad per månad (kr)',...as.map(x=>x.monthly)],
+ ['Löpande betalningar per månad (kr)',...as.map(x=>x.cashflow)],
+ ['Total ägandekostnad (kr)',...as.map(x=>x.total)],
+ ['Värdeminskning (kr)',...as.map(x=>x.depreciation)],
+ ['Räntekostnad (kr)',...as.map(x=>x.interest)],
+ ['El och drivmedel (kr)',...as.map(x=>x.energy)],
+ ['Service, försäkring, skatt m.m. (kr)',...as.map(x=>x.upkeep)],
+ [],
+ ['OBS: Amortering ingår i löpande betalningar men inte i ägandekostnad. Engångsutlägg vid köp ingår inte i löpande betalningar.'],
+ ['Samtliga schabloner är användarstyrda. 20 % kontantinsats är ett antagande.']
+ ];
+ const detailLabels=[
+ ['Bilnamn','name'],['Drivlina','drive'],['Scenario: behålla','keep'],['Inköpspris / aktuellt värde (kr)','price'],
+ ['Framtida värde (kr)','resale'],['Inbytesvärde (kr)','trade'],['Skuld på inbytesbil / befintligt lån (kr)','oldDebt'],
+ ['Egna kontanter (kr)','cash'],['Ränta (%)','rate'],['Lånetid (mån)','term'],
+ ['Elförbrukning (kWh/100 km)','elecUse'],['Bränsleförbrukning (l/100 km)','fuelUse'],
+ ['Andel på el (%)','elecShare'],['Service och reparationer (kr/år)','service'],
+ ['Försäkring (kr/år)','insurance'],['Skatt (kr/år)','tax'],['Däck och slitage (kr/år)','tires'],['Övrigt (kr/år)','other']
+ ];
+ const details=[['Bilarnas inmatade värden'],[],['Fält',...s.cars.map(x=>x.name)],...detailLabels.map(([label,key])=>[label,...s.cars.map(x=>key==='keep'?(x.keep?'Ja':'Nej'):x[key])])];
+ const assumptions=[['Globala antaganden','Värde','Enhet'],['Period',g.years,'år'],['Årlig körsträcka',g.miles,'mil'],['Bensinpris',g.petrol,'kr/l'],['Dieselpris',g.diesel,'kr/l'],['Elpris',g.electricity,'kr/kWh'],['Antagen minsta kontantinsats',20,'%']];
+ for(const [title,rows,width] of [['Översikt',summary,47],['Biluppgifter',details,48],['Antaganden',assumptions,38]]){
+   const ws=XLSX.utils.aoa_to_sheet(rows);
+   ws['!cols']=[{wch:width},...Array.from({length:Math.max(2,as.length)},()=>({wch:25}))];
+   if(title==='Översikt'){
+     for(let ri=5;ri<=25;ri++){const label=rows[ri]?.[0]||'';if(label.includes('(kr)')){for(let ci=1;ci<=as.length;ci++){const address=XLSX.utils.encode_cell({r:ri,c:ci});if(ws[address]?.t==='n')ws[address].z='#,##0 "kr"';}}}
+   }
+   XLSX.utils.book_append_sheet(wb,ws,title);
+ }
+ const date=new Date().toISOString().slice(0,10);
+ XLSX.writeFile(wb,'BilKoll-kalkyl-'+date+'.xlsx',{compression:true});
+}
+$('excel-export').onclick=exportExcel;
+$('import').onclick=()=>$('import-file').click();
+$('import-file').addEventListener('change',async e=>{
+ const file=e.target.files[0];if(!file)return;
+ try{
+ const obj=JSON.parse(await file.text());
+ if(!Array.isArray(obj.cars)||!obj.cars.length||obj.cars.length>3||!obj.g||!Number.isFinite(Number(obj.g.years)))throw Error('Ogiltigt BilKoll-format');
+ const defaults=fresh();
+ s={cars:obj.cars.map((x,i)=>({...make(i+1,'Bil '+(i+1),'gas',250000),...x,id:i+1})),g:{...defaults.g,...obj.g},active:1,nextId:obj.cars.length+1};
+ save();render();alert('Kalkylen har lästs in.');
+ }catch(err){alert('Filen kunde inte läsas som en BilKoll-kalkyl.');}
+ e.target.value='';
+});
 render();
 })();
 </script></body></html>
