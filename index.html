@@ -1,0 +1,53 @@
+<!doctype html><html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#14253b"><title>BilKoll – jämför bilägande</title>
+<style>*{box-sizing:border-box}body{margin:0;background:#f2f5fa;color:#16243a;font:15px system-ui,-apple-system,sans-serif}.wrap{max-width:1000px;margin:auto;padding:14px}header{background:#14253b;color:white;border-radius:16px;padding:24px;margin-bottom:15px}h1{margin:0;font-size:27px}h2{font-size:18px;margin:0 0 12px}h3{font-size:14px;border-top:1px solid #d9e0e9;padding-top:14px;margin:16px 0 10px}.card{background:white;border:1px solid #dce3ec;border-radius:15px;padding:16px;margin-bottom:15px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.third{grid-template-columns:repeat(3,minmax(0,1fr))}.wide{grid-column:1/-1}label{display:block;color:#59677b;font-size:12px;margin-bottom:5px}input,select{width:100%;min-width:0;padding:11px 9px;border:1px solid #cbd4df;border-radius:8px;color:#172338;background:white;font:inherit}button{border:0;border-radius:9px;padding:11px 14px;background:#dbe7ff;color:#194287;font:inherit;font-weight:650;cursor:pointer}button.primary,.tabs button.active{background:#245bd2;color:white}button:disabled{opacity:.4}.row{display:flex;align-items:center;justify-content:space-between;gap:12px}.tabs{display:flex;gap:5px;margin:15px 0;flex-wrap:wrap}.tabs button{flex:1;min-width:100px}.hint{font-size:12px;color:#617185;line-height:1.55}.big{font-size:22px;font-weight:760}.stat{background:#f0f5fc;padding:12px;border-radius:11px}.line{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid #ebedf1}.line span:last-child{font-weight:700;text-align:right}.bar{height:9px;border-radius:10px;background:#e6ebf2;overflow:hidden;margin:8px 0}.bar div{height:100%;border-radius:10px}.warn{color:#ad4c1a}.summary{border-top:2px solid #e7edf5;margin-top:17px;padding-top:13px}@media(max-width:540px){.wrap{padding:9px}header{padding:18px}.third{grid-template-columns:repeat(2,minmax(0,1fr))}.big{font-size:20px}}</style></head>
+<body><div class="wrap"><header><h1>🚙 BilKoll</h1><p>Vad kostar bilen egentligen? Jämför upp till tre valfria bilar.</p></header>
+<section class="card"><h2>Gemensamma antaganden</h2><div class="grid third"><div><label>Jämförelseperiod (år)</label><select id="years"><option>2</option><option selected>3</option><option>5</option><option>7</option><option>10</option></select></div><div><label>Körsträcka (mil/år)</label><input id="miles" type="number"></div><div><label>Bensin (kr/l)</label><input id="petrol" type="number" step=".1"></div><div><label>Diesel (kr/l)</label><input id="diesel" type="number" step=".1"></div><div><label>El (kr/kWh)</label><input id="electricity" type="number" step=".1"></div></div></section>
+<section class="card"><div class="row"><h2>Dina bilar</h2><button id="add" class="primary">+ Lägg till bil</button></div><nav class="tabs" id="tabs"></nav><div id="editor"></div></section>
+<section class="card"><h2>Kostnadsjämförelse</h2><div id="results"></div></section><div class="row"><button id="reset">Återställ</button><button id="export">Exportera kalkyl</button></div>
+<p class="hint">BilKoll använder redigerbara exempelvärden, inte hämtade fordonspriser. Kostnaden inkluderar värdeminskning, ränta och drift, medan amortering påverkar kassaflödet. Kontantinsats på 20 % antas vid köp. Ingen hänsyn tas till uppläggningsavgifter eller ränteavdrag. Lånevillkor och inbyte behöver godkännas av finansbolaget.</p></div>
+<script>
+(()=>{'use strict';
+const $=id=>document.getElementById(id),num=n=>Math.max(0,Number(n)||0),kr=n=>Math.round(Number.isFinite(n)?n:0).toLocaleString('sv-SE')+' kr',esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const make=(id,name,drive,price,keep=false)=>({id,name,drive,price,keep,resale:price*.5,trade:0,oldDebt:0,cash:0,rate:5.5,term:60,fuelUse:6.5,elecUse:20,elecShare:65,service:4500,insurance:7000,tax:1200,tires:3000,other:1500});
+const fresh=()=>({cars:[make(1,'Bil A – nuvarande','phev',180000,true),make(2,'Bil B – alternativ','electric',325000)],active:1,nextId:3,g:{years:3,miles:1500,petrol:18,diesel:18,electricity:2}});
+let s;try{s=JSON.parse(localStorage.getItem('bilkoll-public-v1'));if(!s?.cars?.length)throw 0;}catch(e){s=fresh();}
+function save(){try{localStorage.setItem('bilkoll-public-v1',JSON.stringify(s))}catch(e){}}
+const fld=(k,lab,step=1)=>'<div><label>'+lab+'</label><input data-k="'+k+'" type="number" min="0" step="'+step+'"></div>';
+const sect=t=>'<h3 class="wide">'+t+'</h3>';
+function edit(){
+const c=s.cars.find(x=>x.id===s.active)||s.cars[0];s.active=c.id;
+$('tabs').innerHTML=s.cars.map(x=>'<button data-tab="'+x.id+'" class="'+(x.id===c.id?'active':'')+'">'+esc(x.name)+'</button>').join('');
+$('add').disabled=s.cars.length>=3;
+$('editor').innerHTML='<div class="row"><strong>Redigera bil</strong><button id="remove" '+(s.cars.length<2?'disabled':'')+'>Ta bort</button></div><div class="grid" style="margin-top:13px">'+
+'<div class="wide"><label>Märke, modell, årsmodell (fri text)</label><input data-k="name" type="text"></div>'+
+'<div><label>Drivlina</label><select data-k="drive"><option value="gas">Bensin</option><option value="diesel">Diesel</option><option value="hybrid">Hybrid (ej laddbar)</option><option value="phev">Laddhybrid</option><option value="electric">Elbil</option></select></div>'+
+'<div><label>Scenario</label><select data-k="keep"><option value="false">Köpa / byta</option><option value="true">Behålla bilen</option></select></div>'+
+fld('price',c.keep?'Bilens värde idag (kr)':'Inköpspris (kr)')+fld('resale','Förväntat värde efter perioden (kr)')+
+sect('Finansiering & inbyte')+'<p class="wide hint">Vid byte är ditt övervärde lika med inbytesvärdet minus gamla lånet. Om du behåller bilen anges nuvarande lånesaldo.</p>'+
+(c.keep?'':fld('trade','Inbytesvärde (kr)'))+fld('oldDebt',c.keep?'Nuvarande skuld (kr)':'Skuld på inbytesbil (kr)')+
+(c.keep?'':fld('cash','Extra egna kontanter (kr)'))+fld('rate','Nominell ränta (%)',.1)+fld('term','Återstående / ny löptid (mån)')+
+sect('Förbrukning')+(c.drive==='electric'||c.drive==='phev'?fld('elecUse','El (kWh/100 km)',.1):'')+(c.drive!=='electric'?fld('fuelUse','Bränsle (l/100 km)',.1):'')+(c.drive==='phev'?fld('elecShare','Körning på el (%)'):'')+
+sect('Årliga kostnader')+fld('service','Service och reparationer (kr)')+fld('insurance','Försäkring (kr)')+fld('tax','Fordonsskatt (kr)')+fld('tires','Däck och slitage (kr)')+fld('other','Övrigt (kr)')+'</div>';
+$('editor').querySelectorAll('[data-k]').forEach(i=>{i.value=String(c[i.dataset.k]);i.addEventListener('input',()=>{const k=i.dataset.k;c[k]=k==='name'||k==='drive'?i.value:k==='keep'?i.value==='true':k==='elecShare'?Math.min(100,num(i.value)):num(i.value);save();if(k==='keep'||k==='drive')edit();else if(k==='name')$('tabs').querySelector('[data-tab="'+c.id+'"]').textContent=c.name||'Namnlös';results()})});
+$('tabs').querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{s.active=Number(b.dataset.tab);save();edit()});
+$('remove').onclick=()=>{if(s.cars.length<2)return;s.cars=s.cars.filter(x=>x.id!==c.id);s.active=s.cars[0].id;save();render()};
+}
+function calc(c){const g=s.g,M=g.years*12,km=g.miles*10*g.years,equity=c.trade-c.oldDebt,required=Math.max(0,c.price*.2-equity),gap=c.keep?0:Math.max(0,required-c.cash),loan=c.keep?c.oldDebt:Math.max(0,c.price-equity-c.cash),r=c.rate/1200,t=Math.max(1,Math.round(c.term)),p=r?loan*r/(1-Math.pow(1+r,-t)):loan/t;
+let bal=loan,interest=0,paid=0;for(let i=0;i<Math.min(M,t);i++){let j=bal*r,a=Math.min(bal,Math.max(0,p-j));bal=Math.max(0,bal-a);interest+=j;paid+=j+a;}
+const ekm=c.drive==='electric'?km:c.drive==='phev'?km*c.elecShare/100:0,fkm=km-ekm,energy=ekm*c.elecUse/100*g.electricity+fkm*c.fuelUse/100*(c.drive==='diesel'?g.diesel:g.petrol),upkeep=g.years*(c.service+c.insurance+c.tax+c.tires+c.other),depreciation=c.price-c.resale,total=depreciation+interest+energy+upkeep;
+return{...c,equity,required,gap,loan,bal,interest,paid,p,energy,upkeep,depreciation,total,monthly:total/M,cashflow:(paid+energy+upkeep)/M};
+}
+const line=(a,b)=>'<div class="line"><span>'+a+'</span><span>'+b+'</span></div>';
+function results(){const a=s.cars.map(calc),max=Math.max(1,...a.map(x=>x.monthly)),min=Math.min(...a.map(x=>x.monthly));$('results').innerHTML='<div class="grid">'+a.map((x,i)=>'<div class="stat"><div class="hint">'+esc(x.name)+'</div><div class="big">'+kr(x.monthly)+'</div><div class="hint">Ägandekostnad per månad</div><div class="bar"><div style="width:'+Math.max(0,x.monthly/max*100)+'%;background:'+['#245bd2','#159c81','#ad68ba'][i]+'"></div></div></div>').join('')+'</div><p class="hint">Billigast i kalkylen: '+esc(a.find(x=>x.monthly===min).name)+'. Kassaflödet visar lånebetalningar och drift, men inte pengar vid själva bilbytet.</p>'+a.map(x=>'<div class="summary"><strong>'+esc(x.name)+'</strong>'+
+line('Ägandekostnad/mån',kr(x.monthly))+line('Löpande betalningar/mån',kr(x.cashflow))+
+(x.keep?'':line('Inbyte efter löst lån',kr(x.equity))+line('Minsta kontantinsats (20 %)',kr(x.price*.2))+line('Egna kontanter som behövs',kr(x.required))+line('Extra kontanter som saknas',kr(x.gap)))+
+line('Låneskuld vid start',kr(x.loan))+line('Annuitet under lånets löptid',kr(x.p)+'/mån')+line('Skuld vid periodens slut',kr(x.bal))+line('Värdeminskning',kr(x.depreciation))+line('Räntekostnad',kr(x.interest))+line('El och drivmedel',kr(x.energy))+line('Service, försäkring, skatt m.m.',kr(x.upkeep))+line('Total ägandekostnad',kr(x.total))+
+(x.gap>0?'<p class="warn hint">Observera: ytterligare '+kr(x.gap)+' krävs för att nå den antagna kontantinsatsen. Lånebeloppet ovan är då inte finansierbart enligt 80 %-regeln.</p>':'')+'</div>').join('');}
+function render(){Object.keys(s.g).forEach(k=>$(k).value=s.g[k]);edit();results();}
+Object.keys(s.g).forEach(k=>$(k).addEventListener('input',e=>{s.g[k]=num(e.target.value);save();results()}));
+$('add').onclick=()=>{if(s.cars.length>=3)return;let id=s.nextId++;s.cars.push(make(id,'Bil '+String.fromCharCode(65+s.cars.length),'gas',250000));s.active=id;save();render()};
+$('reset').onclick=()=>{if(confirm('Återställa kalkylen?')){s=fresh();save();render()}};
+$('export').onclick=()=>{const b=new Blob([JSON.stringify(s,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='bilkoll-kalkyl.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
+render();
+})();
+</script></body></html>
