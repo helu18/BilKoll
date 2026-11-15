@@ -8,10 +8,23 @@
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id),num=n=>Math.max(0,Number(n)||0),kr=n=>Math.round(Number.isFinite(n)?n:0).toLocaleString('sv-SE')+' kr',esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const make=(id,name,drive,price,keep=false)=>({id,name,drive,price,keep,resale:price*.5,trade:0,oldDebt:0,cash:0,rate:5.5,term:60,fuelUse:6.5,elecUse:20,elecShare:65,service:4500,insurance:7000,tax:1200,tires:3000,other:1500});
-const fresh=()=>({cars:[make(1,'Bil A – nuvarande','phev',180000,true),make(2,'Bil B – alternativ','electric',325000)],active:1,nextId:3,g:{years:3,miles:1500,petrol:18,diesel:18,electricity:2}});
+const make=(id,name,drive,price,keep=false)=>({id,name,drive,price,keep,resale:price*.5,trade:0,oldDebt:0,cash:0,rate:5.5,term:60,fuelUse:0.65,elecUse:2,elecShare:65,service:4500,insurance:7000,tax:1200,tires:3000,other:1500});
+const fresh=()=>({cars:[make(1,'Bil A – nuvarande','phev',180000,true),make(2,'Bil B – alternativ','electric',325000)],active:1,nextId:3,unitsVersion:2,g:{years:3,miles:1500,petrol:18,diesel:18,electricity:2}});
 let s;try{s=JSON.parse(localStorage.getItem('bilkoll-public-v1'));if(!s?.cars?.length)throw 0;}catch(e){s=fresh();}
 function save(){try{localStorage.setItem('bilkoll-public-v1',JSON.stringify(s))}catch(e){}}
+function migrateUnits(data){
+ if(Number(data.unitsVersion)>=2)return data;
+ for(const c of data.cars||[]){
+  // Old UI used kWh/100 km and l/100 km.
+  // Values < 1.5 l/100 km generally indicate that a user entered l/mil instead.
+  c.elecUse=(Number(c.elecUse)||0)/10;
+  const fuel=Number(c.fuelUse)||0;
+  c.fuelUse=fuel>1.5?fuel/10:fuel;
+ }
+ data.unitsVersion=2;
+ return data;
+}
+s=migrateUnits(s);save();
 const fld=(k,lab,step=1)=>'<div><label>'+lab+'</label><input data-k="'+k+'" type="number" min="0" step="'+step+'"></div>';
 const sect=t=>'<h3 class="wide">'+t+'</h3>';
 function edit(){
@@ -26,7 +39,10 @@ fld('price',c.keep?'Bilens värde idag (kr)':'Inköpspris (kr)')+fld('resale','F
 sect('Finansiering & inbyte')+'<p class="wide hint">Vid byte är ditt övervärde lika med inbytesvärdet minus gamla lånet. Om du behåller bilen anges nuvarande lånesaldo.</p>'+
 (c.keep?'':fld('trade','Inbytesvärde (kr)'))+fld('oldDebt',c.keep?'Nuvarande skuld (kr)':'Skuld på inbytesbil (kr)')+
 (c.keep?'':fld('cash','Extra egna kontanter (kr)'))+fld('rate','Nominell ränta (%)',.1)+fld('term','Återstående / ny löptid (mån)')+
-sect('Förbrukning')+(c.drive==='electric'||c.drive==='phev'?fld('elecUse','El (kWh/100 km)',.1):'')+(c.drive!=='electric'?fld('fuelUse','Bränsle (l/100 km)',.1):'')+(c.drive==='phev'?fld('elecShare','Körning på el (%)'):'')+
+sect('Förbrukning')+'<p class="wide hint">Ange förbrukning per mil (svensk standard): t.ex. 0,6 liter/mil för bensin och 2 kWh/mil för el. På laddhybrider avser bensinvärdet förbrukningen under de mil som körs på bensin, inte hela årets genomsnitt.</p>'+
+(c.drive==='electric'||c.drive==='phev'?fld('elecUse','El (kWh/mil)',.1):'')+
+(c.drive!=='electric'?fld('fuelUse','Bränsle (liter/mil)',.01):'')+
+(c.drive==='phev'?fld('elecShare','Körning på el (%)'):'')+
 sect('Årliga kostnader')+fld('service','Service och reparationer (kr)')+fld('insurance','Försäkring (kr)')+fld('tax','Fordonsskatt (kr)')+fld('tires','Däck och slitage (kr)')+fld('other','Övrigt (kr)')+'</div>';
 $('editor').querySelectorAll('[data-k]').forEach(i=>{i.value=String(c[i.dataset.k]);i.addEventListener('input',()=>{const k=i.dataset.k;c[k]=k==='name'||k==='drive'?i.value:k==='keep'?i.value==='true':k==='elecShare'?Math.min(100,num(i.value)):num(i.value);save();if(k==='keep'||k==='drive')edit();else if(k==='name')$('tabs').querySelector('[data-tab="'+c.id+'"]').textContent=c.name||'Namnlös';results()})});
 $('tabs').querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{s.active=Number(b.dataset.tab);save();edit()});
@@ -34,7 +50,7 @@ $('remove').onclick=()=>{if(s.cars.length<2)return;s.cars=s.cars.filter(x=>x.id!
 }
 function calc(c){const g=s.g,M=g.years*12,km=g.miles*10*g.years,equity=c.trade-c.oldDebt,required=Math.max(0,c.price*.2-equity),gap=c.keep?0:Math.max(0,required-c.cash),loan=c.keep?c.oldDebt:Math.max(0,c.price-equity-c.cash),r=c.rate/1200,t=Math.max(1,Math.round(c.term)),p=r?loan*r/(1-Math.pow(1+r,-t)):loan/t;
 let bal=loan,interest=0,paid=0;for(let i=0;i<Math.min(M,t);i++){let j=bal*r,a=Math.min(bal,Math.max(0,p-j));bal=Math.max(0,bal-a);interest+=j;paid+=j+a;}
-const ekm=c.drive==='electric'?km:c.drive==='phev'?km*c.elecShare/100:0,fkm=km-ekm,energy=ekm*c.elecUse/100*g.electricity+fkm*c.fuelUse/100*(c.drive==='diesel'?g.diesel:g.petrol),upkeep=g.years*(c.service+c.insurance+c.tax+c.tires+c.other),depreciation=c.price-c.resale,total=depreciation+interest+energy+upkeep;
+const ekm=c.drive==='electric'?km:c.drive==='phev'?km*c.elecShare/100:0,fkm=km-ekm,energy=ekm/10*c.elecUse*g.electricity+fkm/10*c.fuelUse*(c.drive==='diesel'?g.diesel:g.petrol),upkeep=g.years*(c.service+c.insurance+c.tax+c.tires+c.other),depreciation=c.price-c.resale,total=depreciation+interest+energy+upkeep;
 return{...c,equity,required,gap,loan,bal,interest,paid,p,energy,upkeep,depreciation,total,monthly:total/M,cashflow:(paid+energy+upkeep)/M};
 }
 const line=(a,b)=>'<div class="line"><span>'+a+'</span><span>'+b+'</span></div>';
@@ -87,7 +103,7 @@ function exportExcel(){
  ['Bilnamn','name'],['Drivlina','drive'],['Scenario: behålla','keep'],['Inköpspris / aktuellt värde (kr)','price'],
  ['Framtida värde (kr)','resale'],['Inbytesvärde (kr)','trade'],['Skuld på inbytesbil / befintligt lån (kr)','oldDebt'],
  ['Egna kontanter (kr)','cash'],['Ränta (%)','rate'],['Lånetid (mån)','term'],
- ['Elförbrukning (kWh/100 km)','elecUse'],['Bränsleförbrukning (l/100 km)','fuelUse'],
+ ['Elförbrukning (kWh/mil)','elecUse'],['Bränsleförbrukning (l/mil)','fuelUse'],
  ['Andel på el (%)','elecShare'],['Service och reparationer (kr/år)','service'],
  ['Försäkring (kr/år)','insurance'],['Skatt (kr/år)','tax'],['Däck och slitage (kr/år)','tires'],['Övrigt (kr/år)','other']
  ];
@@ -112,7 +128,7 @@ $('import-file').addEventListener('change',async e=>{
  const obj=JSON.parse(await file.text());
  if(!Array.isArray(obj.cars)||!obj.cars.length||obj.cars.length>3||!obj.g||!Number.isFinite(Number(obj.g.years)))throw Error('Ogiltigt BilKoll-format');
  const defaults=fresh();
- s={cars:obj.cars.map((x,i)=>({...make(i+1,'Bil '+(i+1),'gas',250000),...x,id:i+1})),g:{...defaults.g,...obj.g},active:1,nextId:obj.cars.length+1};
+ s=migrateUnits({cars:obj.cars.map((x,i)=>({...make(i+1,'Bil '+(i+1),'gas',250000),...x,id:i+1})),g:{...defaults.g,...obj.g},active:1,nextId:obj.cars.length+1,unitsVersion:obj.unitsVersion||1});
  save();render();alert('Kalkylen har lästs in.');
  }catch(err){alert('Filen kunde inte läsas som en BilKoll-kalkyl.');}
  e.target.value='';
